@@ -1,0 +1,164 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StyleVibes</title>
+  <link rel="stylesheet" href="style.css" />
+  
+</head>
+<body>
+  <header>
+    <h1>StyleVibes</h1>
+    <p>Moda com alma, estilo com amor 💖</p>
+  </header>
+
+  <nav>
+    <button onclick="scrollToSection('quiz')">Quiz de Estilo</button>
+    <button onclick="scrollToSection('lookdoDia')">Look do Dia</button>
+    <button onclick="scrollToSection('achadinhos')">Achadinhos</button>
+    <button onclick="scrollToSection('tendencias')">Tendências</button>
+  </nav>
+
+  <section id="quiz"><h2>Quiz de Estilo</h2><p>[Em breve]</p></section>
+  <section id="lookdoDia"><h2>Look do Dia</h2><p>[Foto e descrição]</p></section>
+  <section id="achadinhos"><h2>Achadinhos</h2><p>[Lista de produtos em conta]</p></section>
+  <section id="tendencias"><h2>Tendências</h2><p>[Artigos sobre o que está em alta]</p></section>
+
+  <section class="styles">
+    <h2>Estilos</h2>
+    <img src="top1.png" alt="Estilo clean girl" />
+    <img src="top2.png" alt="Estilo Y2K" />
+  </section>
+
+  <section class="inspirations">
+    <h2>Inspirações</h2>
+    <p><img src="bottom1.png" /> Combine essa peça com uma calça cargo e tênis branco. Você vai ficar uma diva!</p>
+  </section>
+
+  <section class="tips">
+    <h2>Dicas de Moda</h2>
+    <p class="question">O que usar no passeio da escola?</p>
+    <p class="question">5 looks com peças que você já tem</p>
+    <p class="question">Como usar saia jeans sem parecer básica</p>
+  </section>
+
+  <section class="selflove">
+    <h2>Autoestima & Autocuidado</h2>
+    <p class="question">Como me sentir bonita mesmo nos dias ruins?</p>
+    <p class="question">Roupas que abraçam o corpo sem apertar a alma</p>
+  </section>
+
+  <section class="about">
+    <h2>Sobre Nós</h2>
+    <p>Somos apaixonadas por moda acessível e empoderadora!</p>
+  </section>
+
+  <section class="contact">
+    <h2>Contato</h2>
+    <p>Instagram | TikTok | Pinterest</p>
+  </section>
+
+  <section class="interactive">
+    <h2>Interativo</h2>
+    <div id="montador"><h3>Montador de Looks</h3></div>
+    <div>
+      <h3>Wishlist</h3>
+      <ul id="wishlist"></ul>
+      <button id="add-wishlist-btn">Adicionar item</button>
+    </div>
+    <div>
+      <h3>Galeria das Seguidoras</h3>
+      <input type="file" id="upload" />
+      <div id="galeria"></div>
+    </div>
+  </section>
+
+  <footer>&copy; 2025 StyleVibes</footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+<script>
+
+// Configuração do Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBiA1w2oPK24gUGGOaNykYAWesfJoUOZSM",
+  authDomain: "angelicallvibes.firebaseapp.com",
+  projectId: "angelicallvibes",
+  storageBucket: "angelicallvibes.firebasestorage.app",
+  messagingSenderId: "158740952856",
+  appId: "1:158740952856:web:78921a21ba4da47c0d506d"
+};
+
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+firebase.auth().signInAnonymously().catch(console.error);
+
+// Scroll suave
+function scrollToSection(id) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); }
+
+// Wishlist
+const wishlist = document.getElementById("wishlist");
+function addToWishlist(itemName) {
+  const li = document.createElement("li");
+  li.textContent = itemName;
+  wishlist.appendChild(li);
+  db.collection("wishlist").add({ item: itemName, timestamp: new Date() });
+}
+document.getElementById("add-wishlist-btn")?.addEventListener("click", () => {
+  const item = prompt("Digite o nome do item:");
+  if (item) addToWishlist(item);
+});
+
+// Galeria das seguidoras
+const upload = document.getElementById("upload");
+const galeria = document.getElementById("galeria");
+upload?.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const storageRef = storage.ref("galeria/" + file.name);
+  storageRef.put(file).then(snapshot => snapshot.ref.getDownloadURL()).then(url => {
+    db.collection("galeria").add({ imageUrl: url, timestamp: new Date() });
+    const img = document.createElement("img");
+    img.src = url;
+    galeria.appendChild(img);
+  });
+});
+
+// Montador de looks
+const montador = document.getElementById("montador");
+if (montador) {
+  const tops = ["top1.png", "top2.png"];
+  const bottoms = ["bottom1.png", "bottom2.png"];
+  const topImg = document.createElement("img");
+  const bottomImg = document.createElement("img");
+  topImg.width = 100; bottomImg.width = 100;
+
+  let topIndex = 0, bottomIndex = 0;
+  function updateLook() {
+    topImg.src = tops[topIndex];
+    bottomImg.src = bottoms[bottomIndex];
+  }
+  const topBtn = document.createElement("button");
+  topBtn.textContent = "Trocar Top";
+  topBtn.onclick = () => { topIndex = (topIndex + 1) % tops.length; updateLook(); };
+  const bottomBtn = document.createElement("button");
+  bottomBtn.textContent = "Trocar Parte de Baixo";
+  bottomBtn.onclick = () => { bottomIndex = (bottomIndex + 1) % bottoms.length; updateLook(); };
+  montador.appendChild(topImg);
+  montador.appendChild(bottomImg);
+  montador.appendChild(document.createElement("br"));
+  montador.appendChild(topBtn);
+  montador.appendChild(bottomBtn);
+  updateLook();
+}
+</script>
+
+</body>
+</html>
